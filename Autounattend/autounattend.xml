@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="utf-8"?>
+<unattend xmlns="urn:schemas-microsoft-com:unattend" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+	<!--https://schneegans.de/windows/unattend-generator/?LanguageMode=Unattended&UILanguage=en-US&Locale=en-US&Keyboard=00000409&GeoLocation=244&ProcessorArchitecture=amd64&ComputerNameMode=Random&CompactOsMode=Default&TimeZoneMode=Explicit&TimeZone=Singapore+Standard+Time&PartitionMode=Interactive&WindowsEditionMode=Generic&WindowsEdition=pro&UserAccountMode=Unattended&AccountName0=Admin&AccountDisplayName0=&AccountPassword0=%40dmin.Elisha24&AccountGroup0=Administrators&AccountName1=&AccountName2=&AccountName3=&AccountName4=&AutoLogonMode=Builtin&BuiltinAdministratorPassword=%40dmin.Elisha24&PasswordExpirationMode=Unlimited&LockoutMode=Default&HideFiles=Hidden&TaskbarSearch=Box&TaskbarIconsMode=Default&StartTilesMode=Default&StartPinsMode=Default&EnableRemoteDesktop=true&PreventAutomaticReboot=true&HideEdgeFre=true&EffectsMode=Default&DesktopIconsMode=Default&WifiMode=Interactive&ExpressSettings=DisableAll&KeysMode=Skip&ColorMode=Default&WallpaperMode=Default&SystemScript1=%24uri+%3D+%5Buri%5D%3A%3Anew%28+%27https%3A%2F%2Fdl.google.com%2Fchrome%2Finstall%2Fchrome_installer.exe%27+%29%3B%0D%0A%24file+%3D+%22%24env%3ATEMP%5C%7B0%7D%22+-f+%24uri.Segments%5B-1%5D%3B%0D%0A%5BSystem.Net.WebClient%5D%3A%3Anew%28%29.DownloadFile%28+%24uri%2C+%24file+%29%3B%0D%0AStart-Process+-FilePath+%24file+-ArgumentList+%27%2Fsilent+%2Finstall%27+-Wait%3B%0D%0ARemove-Item+-LiteralPath+%24file+-ErrorAction+%27SilentlyContinue%27%3B&SystemScriptType1=Ps1&FirstLogonScript1=%3C%23%0D%0A++.SYNOPSIS%0D%0A++++Installs+Microsoft+Office+365%0D%0A++.DESCRIPTION%0D%0A++++Installs+Microsoft+Office+365+using+a+default+configuration+xml%2C+unless+a+custom+xml+is+provided.%0D%0A++++WARNING%3A+This+script+will+remove+all+existing+office+installations+if+used+with+the+default+configuration+xml.%0D%0A++.PARAMETER+Config%0D%0A++++Parameter+Set%3A+Custom%0D%0A++++File+path+to+custom+configuration+xml+for+office+installations.%0D%0A++.PARAMETER+x86%0D%0A++++Parameter+Set%3A+Builtin%0D%0A++++Switch+parameter+to+install+32-bit+Office+applications+with+the+built-in+XML.%0D%0A++.LINK%0D%0A++++XML+Configuration+Generator%3A+https%3A%2F%2Fconfig.office.com%2F%0D%0A++.NOTES%0D%0A++++Author%3A+Aaron+J.+Stevenson%0D%0A%23%3E%0D%0A%0D%0A%5BCmdletBinding%28DefaultParameterSetName+%3D+%27None%27%29%5D%0D%0Aparam+%28%0D%0A++%5BParameter%28ParameterSetName+%3D+%27Custom%27%29%5D%0D%0A++%5BAlias%28%27Configure%27%29%5D%5BString%5D%24Config%2C%0D%0A%0D%0A++%5BParameter%28ParameterSetName+%3D+%27Builtin%27%29%5D%0D%0A++%5BAlias%28%2732%27%2C+%2732bit%27%29%5D%5BSwitch%5D%24x86%0D%0A%29%0D%0A%0D%0Afunction+Get-ODT+%7B%0D%0A++%5BString%5D%24MSWebPage+%3D+Invoke-RestMethod+%27https%3A%2F%2Fwww.microsoft.com%2Fen-us%2Fdownload%2Fdetails.aspx%3Fid%3D49117%27%0D%0A++%24Script%3AODTURL+%3D+%24MSWebPage+%7C+ForEach-Object+%7B%0D%0A++++if+%28%24_+-match+%27.*href%3D%22%28https%3A%2F%2Fdownload.microsoft.com.*officedeploymenttool.*%5C.exe%29%22%27%29+%7B+%24Matches%5B1%5D+%7D%0D%0A++%7D%0D%0A%0D%0A++try+%7B%0D%0A++++Write-Output+%22%60nDownloading+Office+Deployment+Tool+%28ODT%29...%22%0D%0A++++Invoke-WebRequest+-Uri+%24Script%3AODTURL+-OutFile+%24Script%3AInstaller%0D%0A++++Start-Process+-Wait+-NoNewWindow+-FilePath+%24Script%3AInstaller+-ArgumentList+%22%2Fextract%3A%24Script%3AODT+%2Fquiet%22%0D%0A++%7D%0D%0A++catch+%7B%0D%0A++++Remove-Item+%24Script%3AODT%2C+%24Script%3AInstaller+-Recurse+-Force+-ErrorAction+Ignore%0D%0A++++Write-Warning+%27There+was+an+error+downloading+the+Office+Deployment+Tool.%27%0D%0A++++Write-Warning+%24_%0D%0A++++exit+1%0D%0A++%7D%0D%0A%7D%0D%0A%0D%0Afunction+Set-ConfigXML+%7B%0D%0A++if+%28%24Config%29+%7B%0D%0A++++if+%28Test-Path+%24Config%29+%7B+%0D%0A++++++%24Script%3AConfigFile+%3D+%24Config+%0D%0A++++++Write-Output+%27Provided+configuration+file+will+be+used+for+installation.%27%0D%0A++++%7D%0D%0A++++else+%7B%0D%0A++++++Write-Warning+%27The+configuration+XML+file+path+is+not+valid+or+is+inaccessible.%27%0D%0A++++++Write-Warning+%27Please+check+the+path+and+try+again.%27%0D%0A++++++exit+1%0D%0A++++%7D%0D%0A++%7D%0D%0A++else+%7B%0D%0A++++%24Path+%3D+Split-Path+-Path+%24Script%3AConfigFile+-Parent%0D%0A++++if+%28%21%28Test-Path+-PathType+Container+%24Path%29%29+%7B%0D%0A++++++New-Item+-ItemType+Directory+-Path+%24Path+%7C+Out-Null%0D%0A++++%7D%0D%0A++++%0D%0A++++%24XML+%3D+%5BXML%5D%40%27%0D%0A++%3CConfiguration+ID%3D%225cf809c5-8f36-4fea-a837-69c7185cca8a%22%3E%0D%0A++++%3CRemove+All%3D%22TRUE%22%2F%3E%0D%0A++++%3CAdd+OfficeClientEdition%3D%2264%22+Channel%3D%22Current%22+MigrateArch%3D%22TRUE%22%3E%0D%0A++++++%3CProduct+ID%3D%22O365BusinessRetail%22%3E%0D%0A++++++++%3CLanguage+ID%3D%22en-us%22%2F%3E%0D%0A++++++++%3CExcludeApp+ID%3D%22Groove%22%2F%3E%0D%0A++++++++%3CExcludeApp+ID%3D%22Lync%22%2F%3E%0D%0A++++++%3C%2FProduct%3E%0D%0A++++%3C%2FAdd%3E%0D%0A++++%3CProperty+Name%3D%22SharedComputerLicensing%22+Value%3D%220%22%2F%3E%0D%0A++++%3CProperty+Name%3D%22FORCEAPPSHUTDOWN%22+Value%3D%22TRUE%22%2F%3E%0D%0A++++%3CProperty+Name%3D%22DeviceBasedLicensing%22+Value%3D%220%22%2F%3E%0D%0A++++%3CProperty+Name%3D%22SCLCacheOverride%22+Value%3D%220%22%2F%3E%0D%0A++++%3CUpdates+Enabled%3D%22TRUE%22%2F%3E%0D%0A++++%3CRemoveMSI%2F%3E%0D%0A++++%3CAppSettings%3E%0D%0A++++++%3CUser+Key%3D%22software%5Cmicrosoft%5Coffice%5C16.0%5Cexcel%5Coptions%22+Name%3D%22defaultformat%22+Value%3D%2251%22+Type%3D%22REG_DWORD%22+App%3D%22excel16%22+Id%3D%22L_SaveExcelfilesas%22%2F%3E%0D%0A++++++%3CUser+Key%3D%22software%5Cmicrosoft%5Coffice%5C16.0%5Cpowerpoint%5Coptions%22+Name%3D%22defaultformat%22+Value%3D%2227%22+Type%3D%22REG_DWORD%22+App%3D%22ppt16%22+Id%3D%22L_SavePowerPointfilesas%22%2F%3E%0D%0A++++++%3CUser+Key%3D%22software%5Cmicrosoft%5Coffice%5C16.0%5Cword%5Coptions%22+Name%3D%22defaultformat%22+Value%3D%22%22+Type%3D%22REG_SZ%22+App%3D%22word16%22+Id%3D%22L_SaveWordfilesas%22%2F%3E%0D%0A++++%3C%2FAppSettings%3E%0D%0A++++%3CDisplay+Level%3D%22Full%22+AcceptEULA%3D%22TRUE%22%2F%3E%0D%0A++%3C%2FConfiguration%3E%0D%0A%27%40%0D%0A%0D%0A++++if+%28%24x86+-or+%21%28%5BEnvironment%5D%3A%3AIs64BitOperatingSystem%29%29+%7B%0D%0A++++++%24OfficeClientEdition+%3D+%24XML.SelectSingleNode%28%27%2F%2FAdd%5B%40OfficeClientEdition%5D%27%29%0D%0A++++++%24OfficeClientEdition.SetAttribute%28%27OfficeClientEdition%27%2C+%2732%27%29%0D%0A++++%7D%0D%0A++++%0D%0A++++%24XML.Save%28%22%24Script%3AConfigFile%22%29%0D%0A++%7D%0D%0A%7D%0D%0A%0D%0Afunction+Install-Office+%7B%0D%0A++Write-Output+%27Installing+Microsoft+Office...%27%0D%0A++try+%7B+%0D%0A++++Start-Process+-Wait+-WindowStyle+Hidden+-FilePath+%22%24Script%3AODT%5Csetup.exe%22+-ArgumentList+%22%2Fconfigure+%24Script%3AConfigFile%22%0D%0A++++Write-Output+%27Installation+complete.%27%0D%0A++%7D%0D%0A++catch+%7B%0D%0A++++Write-Warning+%27Error+during+Office+installation%3A%27%0D%0A++++Write-Warning+%24_%0D%0A++%7D%0D%0A++finally+%7B+Remove-Item+%24Script%3AODT%2C+%24Script%3AInstaller+-Recurse+-Force+-ErrorAction+Ignore+%7D%0D%0A%7D%0D%0A%0D%0Afunction+Remove-OfficeHub+%7B%0D%0A++%24AppName+%3D+%27Microsoft.MicrosoftOfficeHub%27%0D%0A++try+%7B%0D%0A++++Write-Output+%22%60nRemoving+%5B%24AppName%5D+%28Microsoft+Store+App%29...%22%0D%0A++++Get-AppxProvisionedPackage+-Online+%7C+Where-Object+%7B+%28%24AppName+-contains+%24_.DisplayName%29+%7D+%7C+Remove-AppxProvisionedPackage+-AllUsers+%7C+Out-Null%0D%0A++++Get-AppxPackage+-AllUsers+%7C+Where-Object+%7B+%28%24AppName+-contains+%24_.Name%29+%7D+%7C+Remove-AppxPackage+-AllUsers%0D%0A++%7D%0D%0A++catch+%7B+%0D%0A++++Write-Warning+%22Error+during+%5B%24AppName%5D+removal%3A%22%0D%0A++++Write-Warning+%24_%0D%0A++%7D%0D%0A%7D%0D%0A%0D%0A%24Script%3AODT+%3D+%22%24env%3Atemp%5CODT%22%0D%0A%24Script%3AConfigFile+%3D+%22%24Script%3AODT%5Coffice-config.xml%22%0D%0A%24Script%3AInstaller+%3D+%22%24env%3Atemp%5CODTSetup.exe%22%0D%0A%0D%0A%23+Adjust+PowerShell+settings%0D%0A%24ProgressPreference+%3D+%27SilentlyContinue%27%0D%0A%24ErrorActionPreference+%3D+%27Stop%27%0D%0Aif+%28%5BNet.ServicePointManager%5D%3A%3ASecurityProtocol+-notcontains+%27Tls12%27+-and+%5BNet.ServicePointManager%5D%3A%3ASecurityProtocol+-notcontains+%27Tls13%27%29+%7B%0D%0A++%5BNet.ServicePointManager%5D%3A%3ASecurityProtocol+%3D+%5BNet.SecurityProtocolType%5D%3A%3ATls12%0D%0A%7D%0D%0A%0D%0AGet-ODT+%0D%0ASet-ConfigXML%0D%0AInstall-Office%0D%0ARemove-OfficeHub&FirstLogonScriptType1=Ps1&WdacMode=Skip-->
+	<settings pass="offlineServicing"></settings>
+	<settings pass="windowsPE">
+		<component name="Microsoft-Windows-International-Core-WinPE" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+			<SetupUILanguage>
+				<UILanguage>en-US</UILanguage>
+			</SetupUILanguage>
+			<InputLocale>0409:00000409</InputLocale>
+			<SystemLocale>en-US</SystemLocale>
+			<UILanguage>en-US</UILanguage>
+			<UserLocale>en-US</UserLocale>
+		</component>
+		<component name="Microsoft-Windows-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+			<UserData>
+				<ProductKey>
+					<Key>VK7JG-NPHTM-C97JM-9MPGT-3V66T</Key>
+					<WillShowUI>OnError</WillShowUI>
+				</ProductKey>
+				<AcceptEula>true</AcceptEula>
+			</UserData>
+			<UseConfigurationSet>false</UseConfigurationSet>
+		</component>
+	</settings>
+	<settings pass="generalize"></settings>
+	<settings pass="specialize">
+		<component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+			<RunSynchronous>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>1</Order>
+					<Path>powershell.exe -WindowStyle Normal -NoProfile -Command "$xml = [xml]::new(); $xml.Load('C:\Windows\Panther\unattend.xml'); $sb = [scriptblock]::Create( $xml.unattend.Extensions.ExtractScript ); Invoke-Command -ScriptBlock $sb -ArgumentList $xml;"</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>2</Order>
+					<Path>powershell.exe -WindowStyle Normal -NoProfile -Command "Get-Content -LiteralPath 'C:\Windows\Setup\Scripts\Specialize.ps1' -Raw | Invoke-Expression;"</Path>
+				</RunSynchronousCommand>
+			</RunSynchronous>
+		</component>
+		<component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+			<TimeZone>Singapore Standard Time</TimeZone>
+		</component>
+	</settings>
+	<settings pass="auditSystem"></settings>
+	<settings pass="auditUser"></settings>
+	<settings pass="oobeSystem">
+		<component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+			<InputLocale>0409:00000409</InputLocale>
+			<SystemLocale>en-US</SystemLocale>
+			<UILanguage>en-US</UILanguage>
+			<UserLocale>en-US</UserLocale>
+		</component>
+		<component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+			<UserAccounts>
+				<AdministratorPassword>
+					<Value>@dmin.Elisha24</Value>
+					<PlainText>true</PlainText>
+				</AdministratorPassword>
+				<LocalAccounts>
+					<LocalAccount wcm:action="add">
+						<Name>Admin</Name>
+						<DisplayName></DisplayName>
+						<Group>Administrators</Group>
+						<Password>
+							<Value>@dmin.Elisha24</Value>
+							<PlainText>true</PlainText>
+						</Password>
+					</LocalAccount>
+				</LocalAccounts>
+			</UserAccounts>
+			<AutoLogon>
+				<Username>Administrator</Username>
+				<Enabled>true</Enabled>
+				<LogonCount>1</LogonCount>
+				<Password>
+					<Value>@dmin.Elisha24</Value>
+					<PlainText>true</PlainText>
+				</Password>
+			</AutoLogon>
+			<OOBE>
+				<ProtectYourPC>3</ProtectYourPC>
+				<HideEULAPage>true</HideEULAPage>
+				<HideWirelessSetupInOOBE>false</HideWirelessSetupInOOBE>
+				<HideOnlineAccountScreens>false</HideOnlineAccountScreens>
+			</OOBE>
+			<FirstLogonCommands>
+				<SynchronousCommand wcm:action="add">
+					<Order>1</Order>
+					<CommandLine>powershell.exe -WindowStyle Normal -NoProfile -Command "Get-Content -LiteralPath 'C:\Windows\Setup\Scripts\FirstLogon.ps1' -Raw | Invoke-Expression;"</CommandLine>
+				</SynchronousCommand>
+			</FirstLogonCommands>
+		</component>
+	</settings>
+	<Extensions xmlns="https://schneegans.de/windows/unattend-generator/">
+		<ExtractScript>
+param(
+    [xml] $Document
+);
+
+foreach( $file in $Document.unattend.Extensions.File ) {
+    $path = [System.Environment]::ExpandEnvironmentVariables( $file.GetAttribute( 'path' ) );
+    mkdir -Path( $path | Split-Path -Parent ) -ErrorAction 'SilentlyContinue';
+    $encoding = switch( [System.IO.Path]::GetExtension( $path ) ) {
+        { $_ -in '.ps1', '.xml' } { [System.Text.Encoding]::UTF8; }
+        { $_ -in '.reg', '.vbs', '.js' } { [System.Text.UnicodeEncoding]::new( $false, $true ); }
+        default { [System.Text.Encoding]::Default; }
+    };
+    $bytes = $encoding.GetPreamble() + $encoding.GetBytes( $file.InnerText.Trim() );
+    [System.IO.File]::WriteAllBytes( $path, $bytes );
+}
+		</ExtractScript>
+		<File path="C:\Windows\Setup\Scripts\MoveActiveHours.vbs">
+HKLM = &amp;H80000002
+key = "SOFTWARE\Microsoft\WindowsUpdate\UX\Settings"
+Set reg = GetObject("winmgmts://./root/default:StdRegProv")
+current = Hour(Now)
+reg.SetDWORDValue HKLM, key, "ActiveHoursStart", ( current + 23 ) Mod 24
+reg.SetDWORDValue HKLM, key, "ActiveHoursEnd", ( current + 11 ) Mod 24
+reg.SetDWORDValue HKLM, key, "SmartActiveHoursState", 2
+		</File>
+		<File path="C:\Windows\Setup\Scripts\MoveActiveHours.xml">
+&lt;Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task"&gt;
+	&lt;Triggers&gt;
+		&lt;BootTrigger&gt;
+			&lt;Repetition&gt;
+				&lt;Interval&gt;PT4H&lt;/Interval&gt;
+				&lt;StopAtDurationEnd&gt;false&lt;/StopAtDurationEnd&gt;
+			&lt;/Repetition&gt;
+			&lt;Enabled&gt;true&lt;/Enabled&gt;
+		&lt;/BootTrigger&gt;
+		&lt;RegistrationTrigger&gt;
+			&lt;Repetition&gt;
+				&lt;Interval&gt;PT4H&lt;/Interval&gt;
+				&lt;StopAtDurationEnd&gt;false&lt;/StopAtDurationEnd&gt;
+			&lt;/Repetition&gt;
+			&lt;Enabled&gt;true&lt;/Enabled&gt;
+		&lt;/RegistrationTrigger&gt;
+	&lt;/Triggers&gt;
+	&lt;Principals&gt;
+		&lt;Principal id="Author"&gt;
+			&lt;UserId&gt;S-1-5-19&lt;/UserId&gt;
+			&lt;RunLevel&gt;LeastPrivilege&lt;/RunLevel&gt;
+		&lt;/Principal&gt;
+	&lt;/Principals&gt;
+	&lt;Settings&gt;
+		&lt;MultipleInstancesPolicy&gt;IgnoreNew&lt;/MultipleInstancesPolicy&gt;
+		&lt;DisallowStartIfOnBatteries&gt;false&lt;/DisallowStartIfOnBatteries&gt;
+		&lt;StopIfGoingOnBatteries&gt;false&lt;/StopIfGoingOnBatteries&gt;
+		&lt;AllowHardTerminate&gt;true&lt;/AllowHardTerminate&gt;
+		&lt;StartWhenAvailable&gt;false&lt;/StartWhenAvailable&gt;
+		&lt;RunOnlyIfNetworkAvailable&gt;false&lt;/RunOnlyIfNetworkAvailable&gt;
+		&lt;IdleSettings&gt;
+			&lt;StopOnIdleEnd&gt;true&lt;/StopOnIdleEnd&gt;
+			&lt;RestartOnIdle&gt;false&lt;/RestartOnIdle&gt;
+		&lt;/IdleSettings&gt;
+		&lt;AllowStartOnDemand&gt;true&lt;/AllowStartOnDemand&gt;
+		&lt;Enabled&gt;true&lt;/Enabled&gt;
+		&lt;Hidden&gt;false&lt;/Hidden&gt;
+		&lt;RunOnlyIfIdle&gt;false&lt;/RunOnlyIfIdle&gt;
+		&lt;WakeToRun&gt;false&lt;/WakeToRun&gt;
+		&lt;ExecutionTimeLimit&gt;PT72H&lt;/ExecutionTimeLimit&gt;
+		&lt;Priority&gt;7&lt;/Priority&gt;
+	&lt;/Settings&gt;
+	&lt;Actions Context="Author"&gt;
+		&lt;Exec&gt;
+			&lt;Command&gt;C:\Windows\System32\wscript.exe&lt;/Command&gt;
+			&lt;Arguments&gt;C:\Windows\Setup\Scripts\MoveActiveHours.vbs&lt;/Arguments&gt;
+		&lt;/Exec&gt;
+	&lt;/Actions&gt;
+&lt;/Task&gt;
+		</File>
+		<File path="C:\Windows\Setup\Scripts\unattend-01.ps1">
+$uri = [uri]::new( 'https://dl.google.com/chrome/install/chrome_installer.exe' );
+$file = "$env:TEMP\{0}" -f $uri.Segments[-1];
+[System.Net.WebClient]::new().DownloadFile( $uri, $file );
+Start-Process -FilePath $file -ArgumentList '/silent /install' -Wait;
+Remove-Item -LiteralPath $file -ErrorAction 'SilentlyContinue';
+		</File>
+		<File path="C:\Windows\Setup\Scripts\unattend-02.ps1">
+&lt;#
+  .SYNOPSIS
+    Installs Microsoft Office 365
+  .DESCRIPTION
+    Installs Microsoft Office 365 using a default configuration xml, unless a custom xml is provided.
+    WARNING: This script will remove all existing office installations if used with the default configuration xml.
+  .PARAMETER Config
+    Parameter Set: Custom
+    File path to custom configuration xml for office installations.
+  .PARAMETER x86
+    Parameter Set: Builtin
+    Switch parameter to install 32-bit Office applications with the built-in XML.
+  .LINK
+    XML Configuration Generator: https://config.office.com/
+  .NOTES
+    Author: Aaron J. Stevenson
+#&gt;
+
+[CmdletBinding(DefaultParameterSetName = 'None')]
+param (
+  [Parameter(ParameterSetName = 'Custom')]
+  [Alias('Configure')][String]$Config,
+
+  [Parameter(ParameterSetName = 'Builtin')]
+  [Alias('32', '32bit')][Switch]$x86
+)
+
+function Get-ODT {
+  [String]$MSWebPage = Invoke-RestMethod 'https://www.microsoft.com/en-us/download/details.aspx?id=49117'
+  $Script:ODTURL = $MSWebPage | ForEach-Object {
+    if ($_ -match '.*href="(https://download.microsoft.com.*officedeploymenttool.*\.exe)"') { $Matches[1] }
+  }
+
+  try {
+    Write-Output "`nDownloading Office Deployment Tool (ODT)..."
+    Invoke-WebRequest -Uri $Script:ODTURL -OutFile $Script:Installer
+    Start-Process -Wait -NoNewWindow -FilePath $Script:Installer -ArgumentList "/extract:$Script:ODT /quiet"
+  }
+  catch {
+    Remove-Item $Script:ODT, $Script:Installer -Recurse -Force -ErrorAction Ignore
+    Write-Warning 'There was an error downloading the Office Deployment Tool.'
+    Write-Warning $_
+    exit 1
+  }
+}
+
+function Set-ConfigXML {
+  if ($Config) {
+    if (Test-Path $Config) { 
+      $Script:ConfigFile = $Config 
+      Write-Output 'Provided configuration file will be used for installation.'
+    }
+    else {
+      Write-Warning 'The configuration XML file path is not valid or is inaccessible.'
+      Write-Warning 'Please check the path and try again.'
+      exit 1
+    }
+  }
+  else {
+    $Path = Split-Path -Path $Script:ConfigFile -Parent
+    if (!(Test-Path -PathType Container $Path)) {
+      New-Item -ItemType Directory -Path $Path | Out-Null
+    }
+    
+    $XML = [XML]@'
+  &lt;Configuration ID="5cf809c5-8f36-4fea-a837-69c7185cca8a"&gt;
+    &lt;Remove All="TRUE"/&gt;
+    &lt;Add OfficeClientEdition="64" Channel="Current" MigrateArch="TRUE"&gt;
+      &lt;Product ID="O365BusinessRetail"&gt;
+        &lt;Language ID="en-us"/&gt;
+        &lt;ExcludeApp ID="Groove"/&gt;
+        &lt;ExcludeApp ID="Lync"/&gt;
+      &lt;/Product&gt;
+    &lt;/Add&gt;
+    &lt;Property Name="SharedComputerLicensing" Value="0"/&gt;
+    &lt;Property Name="FORCEAPPSHUTDOWN" Value="TRUE"/&gt;
+    &lt;Property Name="DeviceBasedLicensing" Value="0"/&gt;
+    &lt;Property Name="SCLCacheOverride" Value="0"/&gt;
+    &lt;Updates Enabled="TRUE"/&gt;
+    &lt;RemoveMSI/&gt;
+    &lt;AppSettings&gt;
+      &lt;User Key="software\microsoft\office\16.0\excel\options" Name="defaultformat" Value="51" Type="REG_DWORD" App="excel16" Id="L_SaveExcelfilesas"/&gt;
+      &lt;User Key="software\microsoft\office\16.0\powerpoint\options" Name="defaultformat" Value="27" Type="REG_DWORD" App="ppt16" Id="L_SavePowerPointfilesas"/&gt;
+      &lt;User Key="software\microsoft\office\16.0\word\options" Name="defaultformat" Value="" Type="REG_SZ" App="word16" Id="L_SaveWordfilesas"/&gt;
+    &lt;/AppSettings&gt;
+    &lt;Display Level="Full" AcceptEULA="TRUE"/&gt;
+  &lt;/Configuration&gt;
+'@
+
+    if ($x86 -or !([Environment]::Is64BitOperatingSystem)) {
+      $OfficeClientEdition = $XML.SelectSingleNode('//Add[@OfficeClientEdition]')
+      $OfficeClientEdition.SetAttribute('OfficeClientEdition', '32')
+    }
+    
+    $XML.Save("$Script:ConfigFile")
+  }
+}
+
+function Install-Office {
+  Write-Output 'Installing Microsoft Office...'
+  try { 
+    Start-Process -Wait -WindowStyle Hidden -FilePath "$Script:ODT\setup.exe" -ArgumentList "/configure $Script:ConfigFile"
+    Write-Output 'Installation complete.'
+  }
+  catch {
+    Write-Warning 'Error during Office installation:'
+    Write-Warning $_
+  }
+  finally { Remove-Item $Script:ODT, $Script:Installer -Recurse -Force -ErrorAction Ignore }
+}
+
+function Remove-OfficeHub {
+  $AppName = 'Microsoft.MicrosoftOfficeHub'
+  try {
+    Write-Output "`nRemoving [$AppName] (Microsoft Store App)..."
+    Get-AppxProvisionedPackage -Online | Where-Object { ($AppName -contains $_.DisplayName) } | Remove-AppxProvisionedPackage -AllUsers | Out-Null
+    Get-AppxPackage -AllUsers | Where-Object { ($AppName -contains $_.Name) } | Remove-AppxPackage -AllUsers
+  }
+  catch { 
+    Write-Warning "Error during [$AppName] removal:"
+    Write-Warning $_
+  }
+}
+
+$Script:ODT = "$env:temp\ODT"
+$Script:ConfigFile = "$Script:ODT\office-config.xml"
+$Script:Installer = "$env:temp\ODTSetup.exe"
+
+# Adjust PowerShell settings
+$ProgressPreference = 'SilentlyContinue'
+$ErrorActionPreference = 'Stop'
+if ([Net.ServicePointManager]::SecurityProtocol -notcontains 'Tls12' -and [Net.ServicePointManager]::SecurityProtocol -notcontains 'Tls13') {
+  [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+}
+
+Get-ODT 
+Set-ConfigXML
+Install-Office
+Remove-OfficeHub
+		</File>
+		<File path="C:\Windows\Setup\Scripts\Specialize.ps1">
+$scripts = @(
+	{
+		net.exe accounts /maxpwage:UNLIMITED;
+	};
+	{
+		netsh.exe advfirewall firewall set rule group="@FirewallAPI.dll,-28752" new enable=Yes;
+		reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f;
+	};
+	{
+		reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v AUOptions /t REG_DWORD /d 4 /f;
+		reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v NoAutoRebootWithLoggedOnUsers /t REG_DWORD /d 1 /f;
+	};
+	{
+		Register-ScheduledTask -TaskName 'MoveActiveHours' -Xml $( Get-Content -LiteralPath 'C:\Windows\Setup\Scripts\MoveActiveHours.xml' -Raw );
+	};
+	{
+		reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v HideFirstRunExperience /t REG_DWORD /d 1 /f;
+	};
+	{
+		Get-Content -LiteralPath 'C:\Windows\Setup\Scripts\unattend-01.ps1' -Raw | Invoke-Expression;
+	};
+);
+
+&amp; {
+	[float] $complete = 0;
+	[float] $increment = 100 / $scripts.Count;
+	foreach( $script in $scripts ) {
+		Write-Progress -Activity 'Running scripts to customize your Windows installation. Do not close this window.' -PercentComplete $complete;
+		&amp; $script;
+		$complete += $increment;
+	}
+} *&gt;&amp;1 &gt;&gt; "C:\Windows\Setup\Scripts\Specialize.log";
+		</File>
+		<File path="C:\Windows\Setup\Scripts\FirstLogon.ps1">
+$scripts = @(
+	{
+		Set-ItemProperty -LiteralPath 'Registry::HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Name 'AutoLogonCount' -Type 'DWord' -Force -Value 0;
+	};
+	{
+		Get-Content -LiteralPath 'C:\Windows\Setup\Scripts\unattend-02.ps1' -Raw | Invoke-Expression;
+	};
+);
+
+&amp; {
+	[float] $complete = 0;
+	[float] $increment = 100 / $scripts.Count;
+	foreach( $script in $scripts ) {
+		Write-Progress -Activity 'Running scripts to finalize your Windows installation. Do not close this window.' -PercentComplete $complete;
+		&amp; $script;
+		$complete += $increment;
+	}
+} *&gt;&amp;1 &gt;&gt; "C:\Windows\Setup\Scripts\FirstLogon.log";
+		</File>
+	</Extensions>
+</unattend>
